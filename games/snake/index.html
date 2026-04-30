@@ -1,1 +1,17 @@
 
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Snake</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4043765559226642" crossorigin="anonymous"></script>
+<style>body{margin:0;background:#1a1a22;color:#fff;font-family:sans-serif;text-align:center;padding:10px}canvas{border:2px solid #7c3aed;background:#0f0f13}#ads{margin:10px auto;width:320px}#gameOver{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:999}button{padding:12px 24px;background:#7c3aed;color:#fff;border:none;border-radius:8px;margin:10px}</style>
+</head><body>
+<h3>🐍 Snake - Score: <span id="score">0</span></h3>
+<div id="ads"><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>
+<canvas id="c" width="300" height="300"></canvas>
+<div id="gameOver"><h2>Game Over</h2><p>Score: <span id="final">0</span></p><ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script><button onclick="location.reload()">Jogar Novamente</button><button onclick="window.location='../../'">Menu</button></div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d'),g=15;let s=[{x:10,y:10}],d={x:0,y:0},f={x:15,y:15},sc=0,go=false;
+function draw(){x.fillStyle='#0f0f13';x.fillRect(0,0,300,300);x.fillStyle='#ef4444';x.fillRect(f.x*g,f.y*g,g-2,g-2);x.fillStyle='#10b981';s.forEach(p=>x.fillRect(p.x*g,p.y*g,g-2,g-2));document.getElementById('score').textContent=sc}
+function update(){if(go)return;const h={x:s[0].x+d.x,y:s[0].y+d.y};if(h.x<0||h.x>=20||h.y<0||h.y>=20||s.some(p=>p.x===h.x&&p.y===h.y))return end();s.unshift(h);if(h.x===f.x&&h.y===f.y){sc+=10;f={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)}}else s.pop();draw()}
+function end(){go=true;document.getElementById('final').textContent=sc;document.getElementById('gameOver').style.display='flex'}
+document.onkeydown=e=>{if(e.key==='ArrowUp'&&d.y===0)d={x:0,y:-1};if(e.key==='ArrowDown'&&d.y===0)d={x:0,y:1};if(e.key==='ArrowLeft'&&d.x===0)d={x:-1,y:0};if(e.key==='ArrowRight'&&d.x===0)d={x:1,y:0}};setInterval(update,100);draw();
+</script></body></html>
