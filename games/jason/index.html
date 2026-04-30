@@ -1,0 +1,169 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Jason: G do Envelope 2.0 - Boss Final</title>
+<meta name="description" content="3 fases + Boss Final. Fuja do Jason com motosserra coletando envelopes G.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4043765559226642" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#000;color:#fff;font-family:-apple-system,sans-serif;text-align:center;overflow:hidden}
+#hud{position:fixed;top:10px;left:0;right:0;z-index:50;display:flex;justify-content:space-around;padding:0 10px;font-weight:bold;text-shadow:2px 2px 4px #000;font-size:16px}
+#phaseIndicator{position:fixed;top:45px;left:50%;transform:translateX(-50%);background:#dc2626;padding:5px 15px;border-radius:20px;z-index:50;font-weight:bold}
+#game{position:relative;width:100%;max-width:400px;height:650px;margin:0 auto;background:#0a0a0f;overflow:hidden;border:3px solid #dc2626}
+#player{position:absolute;bottom:100px;left:50px;width:45px;height:55px;transition:all.1s;z-index:10}
+#player::after{content:'😰';font-size:40px;position:absolute;top:5px;left:2px}
+#jason{position:absolute;bottom:100px;left:-80px;width:60px;height:70px;z-index:9;transition:left.05s linear}
+#jason::after{content:'🔪';font-size:50px;position:absolute;top:5px;left:5px;animation:shake.2s infinite}
+#jason.boss::after{content:'🪚';font-size:55px;animation:rage.3s infinite}
+@keyframes shake{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes rage{0%,100%{transform:rotate(-15deg) scale(1.1)}50%{transform:rotate(15deg) scale(1.1)}}
+.envelope{position:absolute;width:38px;height:28px;background:#fbbf24;border:2px solid #f59e0b;border-radius:4px;z-index:5;animation:float 1s infinite}
+.envelope::after{content:'G';position:absolute;color:#dc2626;font-weight:900;font-size:18px;top:3px;left:12px}
+.powerup{position:absolute;width:40px;height:40px;z-index:5;animation:glow 1s infinite}
+.powerup::after{content:'⚡';font-size:35px;position:absolute;top:0;left:2px}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 5px #fbbf24)}50%{filter:drop-shadow(0 0 15px #fbbf24)}}
+.obstacle{position:absolute;width:50px;height:50px;z-index:5}
+.obstacle::after{content:'🪦';font-size:40px;position:absolute;top:2px;left:5px}
+#ground{position:absolute;bottom:0;width:100%;height:100px;background:linear-gradient(#1f2937,#0f172a);border-top:4px solid #dc2626}
+#blood{position:absolute;bottom:100px;left:0;width:100%;height:3px;background:linear-gradient(90deg,transparent,#dc2626,transparent);opacity:.3;animation:blood 2s infinite}
+@keyframes blood{0%,100%{opacity:.3}50%{opacity:.6}}
+#ads{position:absolute;bottom:110px;width:320px;left:50%;transform:translateX(-50%);z-index:20}
+#menu,#gameOver,#bossWarning{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.98);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:200;padding:20px}
+#gameOver,#bossWarning{display:none}h1{font-size:36px;margin-bottom:15px;color:#dc2626;text-shadow:0 0 20px #dc2626;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+button{padding:18px 40px;background:#dc2626;color:#fff;border:none;border-radius:12px;margin:12px;font-size:20px;font-weight:bold;cursor:pointer;box-shadow:0 4px 15px rgba(220,38,38,.5)}
+button:active{transform:scale(.95)}.controls{position:fixed;bottom:25px;left:0;right:0;display:flex;justify-content:center;gap:40px;z-index:15}
+.controls button{width:90px;height:90px;border-radius:50%;font-size:40px;padding:0;background:rgba(220,38,38,.8);border:4px solid #dc2626}
+#bossHealth{position:fixed;top:80px;left:50%;transform:translateX(-50%);width:80%;max-width:350px;height:25px;background:#1f2937;border:3px solid #dc2626;border-radius:15px;z-index:50;display:none}
+#bossHealthBar{height:100%;background:linear-gradient(90deg,#dc2626,#f87171);border-radius:12px;transition:width.3s}
+</style></head><body>
+<div id="hud"><div>📧 <span id="score">0</span></div><div>❤️ <span id="lives">3</span></div><div>🏃 <span id="distance">0</span>m</div></div>
+<div id="phaseIndicator">FASE 1: FLORESTA</div>
+<div id="bossHealth"><div id="bossHealthBar" style="width:100%"></div></div>
+
+<div id="game">
+  <div id="blood"></div>
+  <div id="player"></div>
+  <div id="jason"></div>
+  <div id="ground"></div>
+  <div id="ads"><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>
+</div>
+
+<div class="controls"><button ontouchstart="jump()" onclick="jump()">⬆️</button><button ontouchstart="attack()" onclick="attack()">⚔️</button><button ontouchstart="slide()" onclick="slide()">⬇️</button></div>
+
+<div id="menu">
+  <h1>🔪 JASON 2.0</h1>
+  <p style="margin:20px 0;color:#a1a1aa;font-size:18px">3 FASES + BOSS FINAL<br>Colete 30 envelopes pra liberar a motosserra!</p>
+  <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <button onclick="startGame()">INICIAR TERROR</button>
+  <button onclick="window.location='../../'">VOLTAR</button>
+</div>
+
+<div id="bossWarning">
+  <h1 style="font-size:48px">⚠️ BOSS FINAL ⚠️</h1>
+  <p style="font-size:24px;margin:20px 0;color:#fbbf24">JASON COM MOTOSSERRA!</p>
+  <p style="color:#a1a1aa">Use ⚔️ pra atacar quando ele chegar perto!</p>
+  <button onclick="startBoss()">ENFRENTAR</button>
+</div>
+
+<div id="gameOver">
+  <h1 id="endTitle">VOCÊ MORREU</h1>
+  <p style="font-size:24px;margin:20px 0">Envelopes: <span id="finalScore">0</span><br>Distância: <span id="finalDist">0</span>m<br>Fase: <span id="finalPhase">1</span></p>
+  <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <button onclick="startGame()">VINGANÇA</button>
+  <button onclick="window.location='../../'">MENU</button>
+</div>
+
+<script>
+let game=document.getElementById('game'),player=document.getElementById('player'),jason=document.getElementById('jason');
+let score=0,lives=3,distance=0,speed=3.5,phase=1,bossMode=false,bossHealth=100,hasWeapon=false;
+let isJumping=false,isSliding=false,gameRunning=false,jasonDistance=-80,canAttack=true;
+let envelopes=[],obstacles=[],powerups=[],gameLoop,spawnLoop;
+
+const phases=[
+  {name:"FLORESTA",color:"#1a1a2e",jasonSpeed:0.8},
+  {name:"CEMITÉRIO",color:"#1a0f1a",jasonSpeed:0.9},
+  {name:"CABANA",color:"#2e1a1a",jasonSpeed:1.0}
+];
+
+function startGame(){
+  document.getElementById('menu').style.display='none';
+  document.getElementById('gameOver').style.display='none';
+  document.getElementById('bossWarning').style.display='none';
+  score=0;lives=3;distance=0;speed=3.5;phase=1;bossMode=false;bossHealth=100;hasWeapon=false;jasonDistance=-80;
+  player.style.left='60px';player.style.bottom='100px';jason.style.left='-80px';jason.classList.remove('boss');
+  envelopes.forEach(e=>e.remove());obstacles.forEach(o=>o.remove());powerups.forEach(p=>p.remove());
+  envelopes=[];obstacles=[];powerups=[];
+  updateHUD();updatePhase();gameRunning=true;
+  document.getElementById('bossHealth').style.display='none';
+  gameLoop=setInterval(update,20);
+  spawnLoop=setInterval(spawn,1300);
+}
+
+function updatePhase(){
+  if(score>=30&&phase===1){phase=2;speed+=0.5;document.getElementById('phaseIndicator').textContent='FASE 2: CEMITÉRIO';game.style.background=phases[1].color;}
+  if(score>=60&&phase===2){phase=3;speed+=0.5;document.getElementById('phaseIndicator').textContent='FASE 3: CABANA';game.style.background=phases[2].color;}
+  if(score>=90&&!bossMode){bossMode=true;clearInterval(spawnLoop);document.getElementById('bossWarning').style.display='flex';gameRunning=false;}
+}
+
+function startBoss(){
+  document.getElementById('bossWarning').style.display='none';
+  jason.classList.add('boss');jasonDistance=-100;bossHealth=100;
+  document.getElementById('bossHealth').style.display='block';
+  document.getElementById('phaseIndicator').textContent='BOSS: MOTOSSERRA';
+  gameRunning=true;hasWeapon=true;
+  spawnLoop=setInterval(spawnBoss,800);
+}
+
+function update(){
+  if(!gameRunning)return;
+  distance++;jasonDistance+=speed*phases[phase-1].jasonSpeed;
+  if(distance%15===0)speed+=0.008;
+  jason.style.left=jasonDistance+'px';
+
+  if(isJumping){let bottom=parseInt(player.style.bottom);if(bottom<220){player.style.bottom=(bottom+9)+'px';}else{isJumping=false;}}
+  else if(!isSliding){let bottom=parseInt(player.style.bottom);if(bottom>100){player.style.bottom=(bottom-9)+'px';}}
+
+  [...envelopes,...obstacles,...powerups].forEach(obj=>{
+    let left=parseInt(obj.style.left);obj.style.left=(left-speed)+'px';
+    if(left<-60){obj.remove();}
+  });
+
+  let pRect=player.getBoundingClientRect();
+  envelopes.forEach((env,i)=>{if(checkCollide(pRect,env.getBoundingClientRect())){env.remove();envelopes.splice(i,1);score+=10;updateHUD();updatePhase();}});
+  obstacles.forEach((obs,i)=>{if(checkCollide(pRect,obs.getBoundingClientRect())){obs.remove();obstacles.splice(i,1);lives--;updateHUD();if(lives<=0)endGame(false);}});
+  powerups.forEach((pow,i)=>{if(checkCollide(pRect,pow.getBoundingClientRect())){pow.remove();powerups.splice(i,1);score+=25;updateHUD();}});
+
+  if(jasonDistance>parseInt(player.style.left)-50){if(bossMode&&hasWeapon&&canAttack){damageBoss();}else{endGame(false);}}
+  updateHUD();
+}
+
+function damageBoss(){
+  canAttack=false;bossHealth-=20;jasonDistance-=80;
+  document.getElementById('bossHealthBar').style.width=bossHealth+'%';
+  setTimeout(()=>canAttack=true,1000);
+  if(bossHealth<=0){endGame(true);}
+}
+
+function spawn(){
+  if(!gameRunning||bossMode)return;
+  let rand=Math.random();
+  if(rand>0.6){let env=document.createElement('div');env.className='envelope';env.style.left='420px';env.style.bottom=(100+Math.random()*120)+'px';game.appendChild(env);envelopes.push(env);}
+  else if(rand>0.3){let obs=document.createElement('div');obs.className='obstacle';obs.style.left='420px';obs.style.bottom='100px';game.appendChild(obs);obstacles.push(obs);}
+  else if(rand>0.2){let pow=document.createElement('div');pow.className='powerup';pow.style.left='420px';pow.style.bottom=(100+Math.random()*120)+'px';game.appendChild(pow);powerups.push(pow);}
+}
+
+function spawnBoss(){
+  if(!gameRunning)return;
+  let obs=document.createElement('div');obs.className='obstacle';obs.style.left='420px';obs.style.bottom='100px';game.appendChild(obs);obstacles.push(obs);
+}
+
+function checkCollide(r1,r2){return!(r1.right<r2.left||r1.left>r2.right||r1.bottom<r2.top||r1.top>r2.bottom);}
+function jump(){if(!isSliding&&parseInt(player.style.bottom)<=105){isJumping=true;}}
+function slide(){if(!isJumping){isSliding=true;player.style.height='30px';setTimeout(()=>{isSliding=false;player.style.height='55px';},500);}}
+function attack(){if(bossMode&&canAttack&&jasonDistance>parseInt(player.style.left)-100){damageBoss();}}
+function updateHUD(){document.getElementById('score').textContent=score;document.getElementById('lives').textContent=lives;document.getElementById('distance').textContent=Math.floor(distance/10);}
+function endGame(victory){gameRunning=false;clearInterval(gameLoop);clearInterval(spawnLoop);document.getElementById('finalScore').textContent=score;document.getElementById('finalDist').textContent=Math.floor(distance/10);document.getElementById('finalPhase').textContent=phase;document.getElementById('endTitle').textContent=victory?'VOCÊ VENCEU!':'VOCÊ MORREU';document.getElementById('endTitle').style.color=victory?'#10b981':'#dc2626';document.getElementById('gameOver').style.display='flex';}
+
+document.addEventListener('keydown',e=>{if(e.code==='Space'||e.code==='ArrowUp'){e.preventDefault();jump();}if(e.code==='ArrowDown'){e.preventDefault();slide();}if(e.code==='KeyX'){e.preventDefault();attack();}});
+</script></body></html>
