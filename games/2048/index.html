@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>2048</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4043765559226642" crossorigin="anonymous"></script>
+<style>
+body{margin:0;background:#faf8ef;color:#776e65;font-family:-apple-system,sans-serif;text-align:center;padding:15px;box-sizing:border-box}
+h1{font-size:48px;margin:10px 0}
+#header{display:flex;justify-content:space-between;align-items:center;max-width:400px;margin:0 auto 15px}
+.score{background:#bbada0;color:#fff;padding:8px 15px;border-radius:6px;font-weight:bold}
+#game{background:#bbada0;padding:10px;border-radius:6px;display:inline-block;position:relative}
+.grid{display:grid;grid-template-columns:repeat(4,80px);grid-template-rows:repeat(4,80px);gap:10px}
+.cell{background:#cdc1b4;border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:bold}
+.cell[data-val="2"]{background:#eee4da}.cell[data-val="4"]{background:#ede0c8}.cell[data-val="8"]{background:#f2b179;color:#fff}
+.cell[data-val="16"]{background:#f59563;color:#fff}.cell[data-val="32"]{background:#f67c5f;color:#fff}.cell[data-val="64"]{background:#f65e3b;color:#fff}
+.cell[data-val="128"]{background:#edcf72;color:#fff;font-size:28px}.cell[data-val="256"]{background:#edcc61;color:#fff;font-size:28px}
+.cell[data-val="512"]{background:#edc850;color:#fff;font-size:28px}.cell[data-val="1024"]{background:#edc53f;color:#fff;font-size:24px}
+.cell[data-val="2048"]{background:#edc22e;color:#fff;font-size:24px}
+#ads{margin:15px auto;width:320px;max-width:100%}
+#gameOver{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(250,248,239,.9);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:999;padding:20px;box-sizing:border-box}
+button{padding:12px 24px;background:#8f7a66;color:#fff;border:none;border-radius:6px;margin:10px;font-size:16px;cursor:pointer}
+@media(max-width:400px){.grid{grid-template-columns:repeat(4,70px);grid-template-rows:repeat(4,70px)}.cell{font-size:28px}}
+</style></head><body>
+<h1>2048</h1>
+<div id="header"><div class="score">Score<br><span id="score">0</span></div><button onclick="init()">Novo Jogo</button><div class="score">Best<br><span id="best">0</span></div></div>
+<div id="ads"><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>
+<div id="game"><div class="grid" id="grid"></div></div>
+<p><b>Como jogar:</b> Use as setas ou deslize para mover. Junte números iguais!</p>
+<div id="gameOver"><h2 id="msg">Game Over!</h2><p>Score: <span id="finalScore">0</span></p><ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script><button onclick="init()">Tentar Novamente</button><button onclick="window.location='../../'">Menu</button></div>
+<script>
+const grid=document.getElementById('grid');let board,score=0,best=localStorage.getItem('best2048')||0;document.getElementById('best').textContent=best;
+function init(){board=[[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];score=0;document.getElementById('score').textContent=0;document.getElementById('gameOver').style.display='none';addTile();addTile();draw();}
+function addTile(){let empty=[];board.forEach((r,y)=>r.forEach((v,x)=>{if(!v)empty.push({x,y})}));if(empty.length){let p=empty[Math.floor(Math.random()*empty.length)];board[p.y][p.x]=Math.random()<0.9?2:4;}}
+function draw(){grid.innerHTML='';board.forEach(row=>row.forEach(val=>{const div=document.createElement('div');div.className='cell';div.textContent=val||'';div.dataset.val=val;grid.appendChild(div);}));}
+function slide(row){let arr=row.filter(v=>v);for(let i=0;i<arr.length-1;i++){if(arr[i]===arr[i+1]){arr[i]*=2;score+=arr[i];arr.splice(i+1,1);}}while(arr.length<4)arr.push(0);return arr;}
+function move(dir){let moved=false,old=JSON.stringify(board);if(dir==='left')board=board.map(slide);if(dir==='right')board=board.map(r=>slide(r.reverse()).reverse());if(dir==='up'){board=transpose(board);board=board.map(slide);board=transpose(board);}if(dir==='down'){board=transpose(board);board=board.map(r=>slide(r.reverse()).reverse());board=transpose(board);}if(JSON.stringify(board)!==old){moved=true;addTile();}document.getElementById('score').textContent=score;if(score>best){best=score;localStorage.setItem('best2048',best);document.getElementById('best').textContent=best;}draw();if(isGameOver())endGame();if(board.flat().includes(2048))document.getElementById('msg').textContent='Você venceu!';}
+function transpose(m){return m[0].map((_,i)=>m.map(r=>r[i]));}
+function isGameOver(){if(board.flat().includes(0))return false;for(let y=0;y<4;y++)for(let x=0;x<4;x++){if(x<3&&board[y][x]===board[y][x+1])return false;if(y<3&&board[y][x]===board[y+1][x])return false;}return true;}
+function endGame(){document.getElementById('finalScore').textContent=score;document.getElementById('gameOver').style.display='flex';}
+document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')move('left');if(e.key==='ArrowRight')move('right');if(e.key==='ArrowUp')move('up');if(e.key==='ArrowDown')move('down');});
+let startX,startY;grid.addEventListener('touchstart',e=>{startX=e.touches[0].clientX;startY=e.touches[0].clientY;});
+grid.addEventListener('touchend',e=>{if(!startX)return;let dx=e.changedTouches[0].clientX-startX;let dy=e.changedTouches[0].clientY-startY;if(Math.abs(dx)>Math.abs(dy)){if(dx>30)move('right');if(dx<-30)move('left');}else{if(dy>30)move('down');if(dy<-30)move('up');}startX=null;});
+init();
+</script></body></html>
