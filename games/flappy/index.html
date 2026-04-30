@@ -1,1 +1,16 @@
-
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Flappy Bird</title>
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4043765559226642" crossorigin="anonymous"></script>
+<style>body{margin:0;background:#1a1a22;color:#fff;font-family:sans-serif;text-align:center}canvas{display:block;margin:10px auto;border:2px solid #7c3aed;background:#70c5ce}#ads{margin:10px auto;width:320px}#gameOver{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;flex-direction:column;z-index:999}button{padding:12px 24px;background:#7c3aed;color:#fff;border:none;border-radius:8px;margin:10px;font-size:16px}</style>
+</head><body>
+<h3>🐤 Flappy Bird - Score: <span id="score">0</span></h3>
+<div id="ads"><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>
+<canvas id="c" width="320" height="480"></canvas>
+<div id="gameOver"><h2>Game Over</h2><p>Score: <span id="final">0</span></p><ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script><button onclick="location.reload()">Jogar Novamente</button><button onclick="window.location='../../'">Menu</button></div>
+<script>
+const c=document.getElementById('c'),x=c.getContext('2d');let b={y:200,v:0},p=[],s=0,f=0,g=false;
+function draw(){if(g)return;x.fillStyle='#70c5ce';x.fillRect(0,0,320,480);x.fillStyle='#ded895';x.fillRect(0,400,320,80);p.forEach(o=>{x.fillStyle='#73bf2e';x.fillRect(o.x,0,o.w,o.t);x.fillRect(o.x,o.t+100,o.w,400-o.t-100)});x.fillStyle='#f7e9a0';x.beginPath();x.arc(80,b.y,12,0,7);x.fill();x.fillStyle='#fff';document.getElementById('score').textContent=s;if(!g)requestAnimationFrame(draw)}
+function update(){if(g)return;f++;b.v+=.5;b.y+=b.v;if(f%90===0)p.push({x:320,w:50,t:Math.random()*200+50,sc:false});p=p.filter(o=>o.x>-60);p.forEach(o=>{o.x-=2;if(!o.sc&&o.x<68){s++;o.sc=true}if(80>o.x&&80<o.x+o.w&&(b.y<o.t||b.y>o.t+100))end()});if(b.y>388||b.y<0)end();if(!g)setTimeout(update,20)}
+function flap(){if(!g)b.v=-8}function end(){g=true;document.getElementById('final').textContent=s;document.getElementById('gameOver').style.display='flex'}
+c.onclick=flap;document.onkeydown=e=>{if(e.code==='Space')flap()};draw();update();
+</script></body></html>
