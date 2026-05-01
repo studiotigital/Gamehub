@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Fruit Slice - GameHub</title>
+<meta name="description" content="Corte frutas, desvie das bombas! Jogo estilo Fruit Ninja grátis.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4043765559226642" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}body{background:#0a0a0f;color:#fff;font-family:-apple-system,sans-serif;overflow:hidden;touch-action:none}
+#hud{position:fixed;top:15px;left:0;right:0;z-index:100;display:flex;justify-content:space-around;font-weight:bold;text-shadow:2px 2px 4px #000;font-size:20px;pointer-events:none}
+#game{position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle,#1a1a2e,#0a0a0f)}
+.fruit,.bomb{position:absolute;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:40px;pointer-events:none;animation:spin 2s linear infinite}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.slice{position:absolute;width:80px;height:80px;pointer-events:none;animation:splash.4s forwards}
+@keyframes splash{0%{transform:scale(0) rotate(0);opacity:1}100%{transform:scale(2) rotate(180deg);opacity:0}}
+.trail{position:absolute;width:8px;height:8px;background:linear-gradient(45deg,#fbbf24,#dc2626);border-radius:50%;pointer-events:none;box-shadow:0 0 10px #fbbf24}
+#ads{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:200}
+#menu,#gameOver{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.95);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:300;padding:20px}
+#gameOver{display:none}h1{font-size:42px;margin-bottom:15px;background:linear-gradient(45deg,#fbbf24,#dc2626);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900}
+button{padding:18px 45px;background:linear-gradient(45deg,#fbbf24,#dc2626);color:#000;border:none;border-radius:12px;margin:12px;font-size:20px;font-weight:bold;cursor:pointer}
+.combo{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:60px;font-weight:900;color:#fbbf24;text-shadow:0 0 20px #fbbf24;pointer-events:none;animation:comboPop.5s;z-index:150}
+@keyframes comboPop{0%{transform:translate(-50%,-50%) scale(0)}50%{transform:translate(-50%,-50%) scale(1.2)}100%{transform:translate(-50%,-50%) scale(1);opacity:0}}
+</style></head><body>
+<div id="hud"><div>🍉 <span id="score">0</span></div><div>❌ <span id="missed">0</span>/3</div><div>🔥 <span id="combo">0</span>x</div></div>
+<div id="game"></div>
+<div id="ads"><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>
+
+<div id="menu">
+  <h1>🍉 FRUIT SLICE</h1>
+  <p style="margin:20px 0;color:#a1a1aa;font-size:18px">Deslize o dedo pra cortar frutas!<br>Desvie das bombas 💣</p>
+  <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <button onclick="startGame()">JOGAR</button>
+  <button onclick="window.location='../../'">VOLTAR</button>
+</div>
+
+<div id="gameOver">
+  <h1>GAME OVER</h1>
+  <p style="font-size:28px;margin:20px 0">Pontos: <span id="finalScore">0</span><br>Max Combo: <span id="maxCombo">0</span>x</p>
+  <div id="newRecord" style="display:none;color:#fbbf24;font-size:24px;margin:10px 0;font-weight:bold">🔥 NOVO RECORDE! 🔥</div>
+  <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <button onclick="startGame()">JOGAR DE NOVO</button>
+  <button onclick="window.location='../../'">MENU</button>
+</div>
+
+<script>
+let game=document.getElementById('game'),score=0,missed=0,combo=0,maxCombo=0,gameRunning=false;
+let fruits=[],trails=[],spawnLoop,isDragging=false,lastX=0,lastY=0;
+const fruitEmojis=['🍉','🍎','🍊','🍋','🍌','🍇','🍓','🥝','🍑','🍍'];
+const splashEmojis=['💥','✨','💫','⭐'];
+
+function startGame(){
+  document.getElementById('menu').style.display='none';
+  document.getElementById('gameOver').style.display='none';
+  score=0;missed=0;combo=0;maxCombo=0;
+  fruits.forEach(f=>f.remove());fruits=[];
+  updateHUD();gameRunning=true;
+  spawnLoop=setInterval(spawnFruit,800);
+}
+
+function spawnFruit(){
+  if(!gameRunning)return;
+  const isBomb=Math.random()<0.15;
+  const fruit=document.createElement('div');
+  fruit.className=isBomb?'bomb':'fruit';
+  fruit.textContent=isBomb?'💣':fruitEmojis[Math.floor(Math.random()*fruitEmojis.length)];
+  fruit.style.left=Math.random()*(window.innerWidth-60)+'px';
+  fruit.style.bottom='-60px';
+  fruit.dataset.vx=(Math.random()-0.5)*8;
+  fruit.dataset.vy=15+Math.random()*8;
+  fruit.dataset.bomb=isBomb;
+  game.appendChild(fruit);
+  fruits.push(fruit);
+}
+
+function update(){
+  if(!gameRunning)return;
+  fruits.forEach((f,i)=>{
+    let x=parseFloat(f.style.left),y=parseFloat(f.style.bottom);
+    let vx=parseFloat(f.dataset.vx),vy=parseFloat(f.dataset.vy);
+    vy-=0.4; // gravidade
+    x+=vx;y+=vy;
+    f.style.left=x+'px';f.style.bottom=y+'px';
+    f.dataset.vy=vy;
+    if(y<-100){
+      f.remove();fruits.splice(i,1);
+      if(f.dataset.bomb==='false'){missed++;combo=0;updateHUD();if(missed>=3)endGame();}
+    }
+  });
+  requestAnimationFrame(update);
+}
+
+function slice(x,y){
+  if(!gameRunning)return;
+  fruits.forEach((f,i)=>{
+    const rect=f.getBoundingClientRect();
+    const dist=Math.hypot(x-rect.left-30,y-rect.top-30);
+    if(dist<50){
+      if(f.dataset.bomb==='true'){
+        endGame();return;
+      }
+      createSlice(rect.left+30,rect.top+30);
+      f.remove();fruits.splice(i,1);
+      combo++;if(combo>maxCombo)maxCombo=combo;
+      score+=10*combo;
+      if(combo>=3)showCombo(combo);
+      updateHUD();
+      setTimeout(()=>combo=0,1000);
+    }
+  });
+}
+
+function createSlice(x,y){
+  const slice=document.createElement('div');
+  slice.className='slice';
+  slice.textContent=splashEmojis[Math.floor(Math.random()*splashEmojis.length)];
+  slice.style.left=x-40+'px';slice.style.top=y-40+'px';
+  game.appendChild(slice);
+  setTimeout(()=>slice.remove(),400);
+}
+
+function showCombo(c){
+  const div=document.createElement('div');
+  div.className='combo';
+  div.textContent=c+'x COMBO!';
+  game.appendChild(div);
+  setTimeout(()=>div.remove(),500);
+}
+
+function createTrail(x,y){
+  const trail=document.createElement('div');
+  trail.className='trail';
+  trail.style.left=x-4+'px';trail.style.top=y-4+'px';
+  game.appendChild(trail);
+  setTimeout(()=>trail.remove(),200);
+}
+
+game.addEventListener('touchstart',e=>{isDragging=true;const t=e.touches[0];lastX=t.clientX;lastY=t.clientY;});
+game.addEventListener('touchmove',e=>{
+  if(!isDragging)return;
+  const t=e.touches[0];
+  slice(t.clientX,t.clientY);
+  createTrail(t.clientX,t.clientY);
+  lastX=t.clientX;lastY=t.clientY;
+});
+game.addEventListener('touchend',()=>{isDragging=false;});
+game.addEventListener('mousedown',e=>{isDragging=true;lastX=e.clientX;lastY=e.clientY;});
+game.addEventListener('mousemove',e=>{if(!isDragging)return;slice(e.clientX,e.clientY);createTrail(e.clientX,e.clientY);});
+game.addEventListener('mouseup',()=>{isDragging=false;});
+
+function updateHUD(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('missed').textContent=missed;
+  document.getElementById('combo').textContent=combo;
+}
+
+function endGame(){
+  gameRunning=false;clearInterval(spawnLoop);
+  let highscore=parseInt(localStorage.getItem('fruitHighscore')||'0');
+  let isNewRecord=score>highscore;
+  if(isNewRecord)localStorage.setItem('fruitHighscore',score);
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('maxCombo').textContent=maxCombo;
+  document.getElementById('newRecord').style.display=isNewRecord?'block':'none';
+  document.getElementById('gameOver').style.display='flex';
+}
+
+requestAnimationFrame(update);
+</script></body></html>
