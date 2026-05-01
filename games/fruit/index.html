@@ -1,0 +1,192 @@
+<!DOCTYPE html><html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>Fruit Slice 2.0 - GameHub</title>
+<meta name="description" content="Corte frutas em HD! Modo Frenesi, combos e ranking. Melhor que Fruit Ninja.">
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4043765559226642" crossorigin="anonymous"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}body{background:#000;color:#fff;font-family:-apple-system,sans-serif;overflow:hidden;touch-action:none}
+#canvas{position:fixed;top:0;left:0;width:100%;height:100%;background:radial-gradient(circle at 50% 30%,#1e1b4b,#000)}
+#hud{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;justify-content:space-between;padding:20px;font-weight:900;text-shadow:0 2px 10px #000;font-size:24px;pointer-events:none}
+.hud-item{background:rgba(0,0,0,.6);padding:8px 16px;border-radius:20px;border:2px solid rgba(251,191,36,.3)}
+#comboDisplay{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:80px;font-weight:900;color:#fbbf24;text-shadow:0 0 30px #fbbf24;pointer-events:none;animation:comboIn.3s;z-index:150}
+@keyframes comboIn{0%{transform:translate(-50%,-50%) scale(0) rotate(-180deg)}100%{transform:translate(-50%,-50%) scale(1) rotate(0)}}
+#frenzy{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:linear-gradient(90deg,#dc2626,#fbbf24,#dc2626);padding:10px 30px;border-radius:25px;font-weight:900;font-size:20px;display:none;z-index:100;animation:pulse 0.5s infinite}
+@keyframes pulse{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.1)}}
+#ads{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);z-index:200}
+#menu,#gameOver{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.97);display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:300;padding:20px;backdrop-filter:blur(10px)}
+#gameOver{display:none}h1{font-size:56px;margin-bottom:20px;background:linear-gradient(45deg,#fbbf24,#f97316,#dc2626);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900;text-shadow:0 0 40px rgba(251,191,36,.5)}
+button{padding:20px 50px;background:linear-gradient(135deg,#fbbf24,#f97316);color:#000;border:none;border-radius:15px;margin:12px;font-size:22px;font-weight:900;cursor:pointer;box-shadow:0 8px 25px rgba(251,191,36,.4);transition:all.2s}
+button:active{transform:scale(.95);box-shadow:0 4px 15px rgba(251,191,36,.6)}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin:20px 0;width:100%;max-width:400px}
+.stat{background:rgba(30,27,75,.6);padding:15px;border-radius:12px;border:2px solid rgba(251,191,36,.2)}
+.stat-value{font-size:32px;font-weight:900;color:#fbbf24}
+.stat-label{font-size:14px;color:#a1a1aa;margin-top:5px}
+</style></head><body>
+<canvas id="canvas"></canvas>
+<div id="hud">
+  <div class="hud-item">🍉 <span id="score">0</span></div>
+  <div class="hud-item">❌ <span id="lives">3</span></div>
+  <div class="hud-item">⚡ <span id="combo">0</span>x</div>
+</div>
+<div id="frenzy">🔥 FRENESI! 🔥</div>
+<div id="ads"><ins class="adsbygoogle" style="display:inline-block;width:320px;height:50px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins><script>(adsbygoogle = window.adsbygoogle || []).push({});</script></div>
+
+<div id="menu">
+  <h1>🍉 FRUIT SLICE 2.0</h1>
+  <p style="margin:20px 0;color:#a1a1aa;font-size:18px;line-height:1.6">Deslize pra cortar frutas<br>Desvie das bombas 💣<br>Combo 10x = FRENESI!</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="highscore">0</div><div class="stat-label">RECORDE</div></div>
+    <div class="stat"><div class="stat-value" id="totalCuts">0</div><div class="stat-label">CORTES TOTAIS</div></div>
+  </div>
+  <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <button onclick="startGame()">JOGAR</button>
+  <button onclick="window.location='../../'">VOLTAR</button>
+</div>
+
+<div id="gameOver">
+  <h1>GAME OVER</h1>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="finalScore">0</div><div class="stat-label">PONTOS</div></div>
+    <div class="stat"><div class="stat-value" id="maxCombo">0</div><div class="stat-label">MAX COMBO</div></div>
+    <div class="stat"><div class="stat-value" id="fruitsCut">0</div><div class="stat-label">FRUTAS</div></div>
+    <div class="stat"><div class="stat-value" id="accuracy">0%</div><div class="stat-label">PRECISÃO</div></div>
+  </div>
+  <div id="newRecord" style="display:none;color:#fbbf24;font-size:28px;margin:15px 0;font-weight:900;animation:pulse 1s infinite">🔥 NOVO RECORDE! 🔥</div>
+  <ins class="adsbygoogle" style="display:block;width:300px;height:250px" data-ad-client="ca-pub-4043765559226642" data-ad-slot="3854424641"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  <button onclick="startGame()">JOGAR DE NOVO</button>
+  <button onclick="window.location='../../'">MENU</button>
+</div>
+
+<script>
+const canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+let score=0,lives=3,combo=0,maxCombo=0,gameRunning=false,frenzyMode=false;
+let fruits=[],particles=[],slices=[],bladePoints=[];
+let spawnRate=60,frameCount=0,fruitsCut=0,fruitsMissed=0,totalCuts=0;
+let isDrawing=false;
+
+const fruitTypes=[
+  {emoji:'🍉',color:'#dc2626',points:10},
+  {emoji:'🍎',color:'#ef4444',points:10},
+  {emoji:'🍊',color:'#f97316',points:15},
+  {emoji:'🍋',color:'#fbbf24',points:15},
+  {emoji:'🍌',color:'#facc15',points:20},
+  {emoji:'🍇',color:'#a855f7',points:20},
+  {emoji:'🍓',color:'#ec4899',points:25},
+  {emoji:'🥝',color:'#84cc16',points:25},
+  {emoji:'🍑',color:'#fb923c',points:30},
+  {emoji:'🍍',color:'#eab308',points:30}
+];
+
+class Fruit{
+  constructor(x,y,vx,vy,isBomb=false){
+    this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.isBomb=isBomb;
+    this.angle=0;this.angularVel=(Math.random()-0.5)*0.3;
+    this.sliced=false;this.size=60;
+    if(!isBomb){const t=fruitTypes[Math.floor(Math.random()*fruitTypes.length)];this.emoji=t.emoji;this.color=t.color;this.points=t.points;}
+    else{this.emoji='💣';this.color='#1f2937';}
+  }
+  update(){
+    this.vy+=0.3;this.x+=this.vx;this.y+=this.vy;this.angle+=this.angularVel;
+    if(this.y>canvas.height+100&&!this.sliced&&!this.isBomb){fruitsMissed++;lives--;combo=0;updateHUD();if(lives<=0)endGame();return false;}
+    if(this.x<-100||this.x>canvas.width+100)return false;
+    return true;
+  }
+  draw(){
+    ctx.save();ctx.translate(this.x,this.y);ctx.rotate(this.angle);ctx.font=`${this.size}px Arial`;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.shadowBlur=20;ctx.shadowColor=this.color;ctx.fillText(this.emoji,0,0);ctx.restore();
+  }
+  slice(){
+    if(this.isBomb){endGame();return;}
+    this.sliced=true;score+=this.points*(combo+1)*(frenzyMode?3:1);combo++;if(combo>maxCombo)maxCombo=combo;fruitsCut++;totalCuts++;
+    if(combo>=10&&!frenzyMode)activateFrenzy();
+    createParticles(this.x,this.y,this.color);updateHUD();
+  }
+}
+
+class Particle{
+  constructor(x,y,color){this.x=x;this.y=y;this.vx=(Math.random()-0.5)*15;this.vy=(Math.random()-0.5)*15-5;this.life=30;this.color=color;this.size=Math.random()*8+4;}
+  update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.5;this.life--;return this.life>0;}
+  draw(){ctx.save();ctx.globalAlpha=this.life/30;ctx.fillStyle=this.color;ctx.shadowBlur=10;ctx.shadowColor=this.color;ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();ctx.restore();}
+}
+
+function createParticles(x,y,color){for(let i=0;i<15;i++)particles.push(new Particle(x,y,color));}
+function activateFrenzy(){frenzyMode=true;document.getElementById('frenzy').style.display='block';setTimeout(()=>{frenzyMode=false;document.getElementById('frenzy').style.display='none';},5000);}
+function spawnFruit(){if(!gameRunning)return;const side=Math.random()<0.5;const x=side?0:canvas.width;const y=canvas.height-Math.random()*200;const vx=side?5+Math.random()*5:-5-Math.random()*5;const vy=-18-Math.random()*5;const isBomb=Math.random()<0.12;fruits.push(new Fruit(x,y,vx,vy,isBomb));}
+
+function drawBlade(){
+  if(bladePoints.length<2)return;
+  ctx.save();ctx.strokeStyle='#fbbf24';ctx.lineWidth=8;ctx.lineCap='round';ctx.lineJoin='round';ctx.shadowBlur=20;ctx.shadowColor='#fbbf24';
+  ctx.beginPath();ctx.moveTo(bladePoints[0].x,bladePoints[0].y);
+  for(let i=1;i<bladePoints.length;i++){ctx.lineTo(bladePoints[i].x,bladePoints[i].y);}
+  ctx.stroke();ctx.restore();
+  bladePoints=bladePoints.filter(p=>Date.now()-p.time<100);
+}
+
+function checkSlice(x1,y1,x2,y2){
+  fruits.forEach(f=>{
+    if(f.sliced)return;
+    const dist=Math.abs((y2-y1)*f.x-(x2-x1)*f.y+x2*y1-y2*x1)/Math.hypot(y2-y1,x2-x1);
+    if(dist<40&&Math.min(x1,x2)<=f.x&&f.x<=Math.max(x1,x2)&&Math.min(y1,y2)<=f.y&&f.y<=Math.max(y1,y2)){f.slice();}
+  });
+}
+
+function gameLoop(){
+  if(!gameRunning)return;
+  ctx.fillStyle='rgba(10,10,15,0.3)';ctx.fillRect(0,0,canvas.width,canvas.height);
+  frameCount++;if(frameCount%Math.max(20,spawnRate-Math.floor(score/100))===0)spawnFruit();
+  fruits=fruits.filter(f=>f.update());fruits.forEach(f=>f.draw());
+  particles=particles.filter(p=>p.update());particles.forEach(p=>p.draw());
+  drawBlade();
+  if(frameCount%60===0&&combo>0){combo=Math.max(0,combo-1);updateHUD();}
+  requestAnimationFrame(gameLoop);
+}
+
+function startGame(){
+  document.getElementById('menu').style.display='none';
+  document.getElementById('gameOver').style.display='none';
+  score=0;lives=3;combo=0;maxCombo=0;fruitsCut=0;fruitsMissed=0;frenzyMode=false;
+  fruits=[];particles=[];bladePoints=[];frameCount=0;
+  updateHUD();gameRunning=true;gameLoop();
+}
+
+function endGame(){
+  gameRunning=false;
+  const highscore=parseInt(localStorage.getItem('fruitHighscore')||'0');
+  const totalSaved=parseInt(localStorage.getItem('fruitTotalCuts')||'0');
+  const isNewRecord=score>highscore;
+  if(isNewRecord)localStorage.setItem('fruitHighscore',score);
+  localStorage.setItem('fruitTotalCuts',totalSaved+fruitsCut);
+  document.getElementById('finalScore').textContent=score;
+  document.getElementById('maxCombo').textContent=maxCombo+'x';
+  document.getElementById('fruitsCut').textContent=fruitsCut;
+  document.getElementById('accuracy').textContent=fruitsCut+fruitsMissed>0?Math.round(fruitsCut/(fruitsCut+fruitsMissed)*100)+'%':'0%';
+  document.getElementById('newRecord').style.display=isNewRecord?'block':'none';
+  document.getElementById('gameOver').style.display='flex';
+}
+
+function updateHUD(){
+  document.getElementById('score').textContent=score;
+  document.getElementById('lives').textContent=lives;
+  document.getElementById('combo').textContent=combo;
+}
+
+canvas.addEventListener('touchstart',e=>{isDrawing=true;const t=e.touches[0];bladePoints=[{x:t.clientX,y:t.clientY,time:Date.now()}];});
+canvas.addEventListener('touchmove',e=>{
+  if(!isDrawing)return;const t=e.touches[0];const last=bladePoints[bladePoints.length-1];
+  bladePoints.push({x:t.clientX,y:t.clientY,time:Date.now()});
+  if(bladePoints.length>1)checkSlice(last.x,last.y,t.clientX,t.clientY);
+});
+canvas.addEventListener('touchend',()=>{isDrawing=false;setTimeout(()=>bladePoints=[],100);});
+canvas.addEventListener('mousedown',e=>{isDrawing=true;bladePoints=[{x:e.clientX,y:e.clientY,time:Date.now()}];});
+canvas.addEventListener('mousemove',e=>{if(!isDrawing)return;const last=bladePoints[bladePoints.length-1];bladePoints.push({x:e.clientX,y:e.clientY,time:Date.now()});if(bladePoints.length>1)checkSlice(last.x,last.y,e.clientX,e.clientY);});
+canvas.addEventListener('mouseup',()=>{isDrawing=false;setTimeout(()=>bladePoints=[],100);});
+
+window.onload=()=>{
+  document.getElementById('highscore').textContent=localStorage.getItem('fruitHighscore')||'0';
+  document.getElementById('totalCuts').textContent=localStorage.getItem('fruitTotalCuts')||'0';
+};
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+window.startGame=startGame;
+</script></body></html>
